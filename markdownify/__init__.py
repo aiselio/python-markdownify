@@ -8,7 +8,7 @@ line_beginning_re = re.compile(r'^', re.MULTILINE)
 whitespace_re = re.compile(r'[\t ]+')
 all_whitespace_re = re.compile(r'[\s]+')
 html_heading_re = re.compile(r'h[1-6]')
-
+escape_re = re.compile(r"([`\*_{}\[\]\(\)#!])")
 
 # Heading styles
 ATX = 'atx'
@@ -25,9 +25,11 @@ ASTERISK = '*'
 UNDERSCORE = '_'
 
 
-def escape(text):
+def escape(text, special=False):
     if not text:
         return ''
+    if special:
+        return escape_re.sub(r"\\\1", text)
     return text.replace('_', r'\_')
 
 
@@ -77,6 +79,7 @@ class MarkdownConverter(object):
         sub_symbol = ''
         sup_symbol = ''
         code_language = ''
+        escape_special = False
 
     class Options(DefaultOptions):
         pass
@@ -155,7 +158,7 @@ class MarkdownConverter(object):
             text = whitespace_re.sub(' ', text)
 
         if el.parent.name != 'code':
-            text = escape(text)
+            text = escape(text, special=self.options['escape_special'])
 
         # remove trailing whitespaces if any of the following condition is true:
         # - current text node is the last node in li
